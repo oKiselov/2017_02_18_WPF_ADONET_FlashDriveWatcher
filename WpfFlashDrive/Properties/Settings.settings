@@ -2,13 +2,13 @@
 <SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" CurrentProfile="(Default)" GeneratedClassNamespace="WpfFlashDrive.Properties" GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <Setting Name="DirectoryForWatcing" Type="System.String" Scope="User">
+    <Setting Name="DirectoryForWatching" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
     <Setting Name="TypeOfScan" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
-    <Setting Name="DisabledDrives" Type="System.String" Scope="User">
+    <Setting Name="FlashDrive" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
   </Settings>

@@ -1,9 +1,11 @@
 ﻿using System;
+using System.Activities.Presentation.Hosting;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -16,8 +18,9 @@ using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
 using System.Xaml;
-using Size = System.Windows.Size;
 using System.Configuration;
+using System.IO;
+using System.Management;
 
 namespace WpfFlashDrive
 {
@@ -29,6 +32,11 @@ namespace WpfFlashDrive
         private System.Windows.Forms.NotifyIcon notifyIcon;
         private System.Windows.Forms.ContextMenu contextMenu;
         private System.ComponentModel.IContainer components;
+
+        // for windows messages hooking 
+        private List<DriveInfo> _listOfDriveInfo = null;
+
+        UsbDeviceInfo usbDevice;
 
         public MainWindow()
         {
@@ -42,10 +50,53 @@ namespace WpfFlashDrive
 
             Left = System.Windows.SystemParameters.WorkArea.Right - Width;
             Top = System.Windows.SystemParameters.WorkArea.Bottom - Height;
-            Visibility=Visibility.Hidden;
+            Visibility = Visibility.Hidden;
             WindowStyle = WindowStyle.None;
+
+            // fix information about drives at the moment 
+            _listOfDriveInfo =
+                new List<DriveInfo>(DriveInfo.GetDrives()).Where(drive => drive.DriveType == DriveType.Removable)
+                    .ToList();
+
+            usbDevice = new UsbDeviceInfo("id", "name");
+            Task.Run(() =>
+            {
+                usbDevice.DetectUsbDrive(new List<UsbDeviceInfo>());
+            });
+
+            usbDevice.UsbAdd += CheckAddedUsb;
+            usbDevice.UsbRemoved += CheckRemovedUsb;
         }
 
+        // method for adding drive to list 
+        public void CheckAddedUsb(object sender, UsbEventArgs eventArgs)
+        {
+            DriveInfo driveInfo = null;
+            driveInfo = FileOperator.GetDriveInfoAddUsb(_listOfDriveInfo);
+            if (driveInfo != null)
+            {
+                DialogResult dialogResult =
+                    System.Windows.Forms.MessageBox.Show(
+                        "USB device was added. Name:" + driveInfo.Name +
+                        ". To start scanning your device press button Start Scan!", "USB", MessageBoxButtons.OK);
+                Properties.Settings.Default.FlashDrive = driveInfo.Name;
+            }
+        }
+
+
+        /// <summary>
+        /// Event for removing drive from list 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        public void CheckRemovedUsb(object sender, UsbEventArgs eventArgs)
+        {
+            _listOfDriveInfo = FileOperator.SetDriveInfoRemoveUsb(_listOfDriveInfo); 
+        }
+
+        /// <summary>
+        /// Method sets all images and icons 
+        /// </summary>
         private void InitializeIconsMainWindow()
         {
             Icon = new BitmapImage(new Uri(ConfigurationManager.AppSettings["Icon_Main"], UriKind.Relative));
@@ -68,6 +119,9 @@ namespace WpfFlashDrive
 
         }
 
+        /// <summary>
+        /// Notification of NotifyIcon 
+        /// </summary>
         private void SetNotifyIcon()
         {
             // create notify icon 
@@ -112,6 +166,11 @@ namespace WpfFlashDrive
             contextMenu.MenuItems[3].Click += Click_CloseMainWindow;
         }
 
+        /// <summary>
+        /// Open main window 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
         private void Click_OpenMainWindow(object sender, EventArgs eventArgs)
         {
             // Show the form when the user double clicks on the notify icon.
@@ -124,6 +183,11 @@ namespace WpfFlashDrive
             WindowStyle = WindowStyle.None;
         }
 
+        /// <summary>
+        /// Open settings window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
         private void Click_Settings(object sender, EventArgs eventArgs)
         {
             WindowSettings window = new WindowSettings();
@@ -133,6 +197,11 @@ namespace WpfFlashDrive
             window.ShowDialog();
         }
 
+        /// <summary>
+        /// Method starts scan process
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
         private void Click_StartScan(object sender, EventArgs eventArgs)
         {
             WindowScan window = new WindowScan();
@@ -142,10 +211,45 @@ namespace WpfFlashDrive
             window.ShowDialog();
         }
 
+        /// <summary>
+        /// Method closes main window 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
         private void Click_CloseMainWindow(object sender, EventArgs eventArgs)
         {
             Close();
             notifyIcon.Dispose();
+        }
+
+        /// <summary>
+        /// Method hides main window
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButtonHide_OnClick(object sender, RoutedEventArgs e)
+        {
+            Visibility = Visibility.Hidden;
+        }
+
+        /// <summary>
+        /// Method creates file with statistics - Statistics.txt in the root 
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void ButtonStatistics_OnClick(object sender, RoutedEventArgs e)
+        {
+            DataService dataService = new DataService();
+            dataService.SetConnectionString(WpfFlashDrive.DataProvider.SqlServer);
+            dataService.OpenConnection(WpfFlashDrive.DataProvider.SqlServer);
+            dataService.GetStatistics();
+            dataService.CloseConnection();
+        }
+
+        private static void RemoveUSBHandler()
+        {
+            WqlEventQuery query; 
+            ManagementScope scope = new ManagementScope();
         }
     }
 }

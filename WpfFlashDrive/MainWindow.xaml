@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WpfFlashDrive"
         mc:Ignorable="d"
-        Name="WindowTop" Title="MainWindow" Width="400" Height="100" ResizeMode="NoResize" WindowStyle="None" Background="LightGray">
+        Name="WindowTop" Title="MainWindow" Width="400" Height="100" ResizeMode="NoResize" WindowStyle="None" Background="LightGray" >
     <Grid>
         <Grid.ColumnDefinitions>
             <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
@@ -15,8 +15,8 @@
         <Button ToolTip="Settings" Grid.Column="1" Name="ButtonSettings" Margin="2"
                 BorderBrush="Transparent" Click="Click_Settings"/>
         <Button ToolTip="Statistics" Grid.Column="2" Name="ButtonStatistics"  Margin="2" 
-                BorderBrush="Transparent"/>
+                BorderBrush="Transparent" Click="ButtonStatistics_OnClick"/>
         <Button ToolTip="Hide" Grid.Column="3" Name="ButtonHide" Margin="2" 
-                BorderBrush="Transparent"/>
+                BorderBrush="Transparent" Click="ButtonHide_OnClick"/>
     </Grid>
 </Window>

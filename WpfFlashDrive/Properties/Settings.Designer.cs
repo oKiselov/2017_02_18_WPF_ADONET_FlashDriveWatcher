@@ -26,12 +26,12 @@ namespace WpfFlashDrive.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DirectoryForWatcing {
+        public string DirectoryForWatching {
             get {
-                return ((string)(this["DirectoryForWatcing"]));
+                return ((string)(this["DirectoryForWatching"]));
             }
             set {
-                this["DirectoryForWatcing"] = value;
+                this["DirectoryForWatching"] = value;
             }
         }
         
@@ -50,12 +50,12 @@ namespace WpfFlashDrive.Properties {
         [global::System.Configuration.UserScopedSettingAttribute()]
         [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
         [global::System.Configuration.DefaultSettingValueAttribute("")]
-        public string DisabledDrives {
+        public string FlashDrive {
             get {
-                return ((string)(this["DisabledDrives"]));
+                return ((string)(this["FlashDrive"]));
             }
             set {
-                this["DisabledDrives"] = value;
+                this["FlashDrive"] = value;
             }
         }
     }
