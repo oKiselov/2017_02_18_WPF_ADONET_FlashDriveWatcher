@@ -136,10 +136,10 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="FilesFlashDrive.mdf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="FilesFlashDrive_log.ldf">
-      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
       <DependentUpon>FilesFlashDrive.mdf</DependentUpon>
     </Content>
     <Content Include="Images\icon.ico">

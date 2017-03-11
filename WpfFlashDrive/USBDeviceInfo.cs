@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Management;
-using System.Runtime.CompilerServices;
+using System.Windows.Forms;
 
 namespace WpfFlashDrive
 {
@@ -30,8 +30,15 @@ namespace WpfFlashDrive
         /// <param name="deviceID"></param>
         public UsbDeviceInfo(string deviceID, string name)
         {
-            this.strDeviceID = deviceID;
-            strName = name; 
+            try
+            {
+                this.strDeviceID = deviceID;
+                strName = name;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -40,43 +47,49 @@ namespace WpfFlashDrive
         /// <param name="listPrevDevices"></param>
         public void DetectUsbDrive(List<UsbDeviceInfo> listPrevDevices)
         {
-            while (true)
+            try
             {
-                List<UsbDeviceInfo> devices = new List<UsbDeviceInfo>();
-
-                ManagementObjectCollection collection;
-                using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub"))
+                while (true)
                 {
-                    collection = searcher.Get();
-                }
+                    List<UsbDeviceInfo> devices = new List<UsbDeviceInfo>();
 
-                foreach (var device in collection)
-                {
-                    device.SystemProperties.SyncRoot.ToString();
-                    devices.Add(new UsbDeviceInfo(
-                        (string)device.GetPropertyValue("DeviceID"), 
-                        (string)device.GetPropertyValue("Name")));
-                }
+                    ManagementObjectCollection collection;
+                    using (var searcher = new ManagementObjectSearcher(@"Select * From Win32_USBHub"))
+                    {
+                        collection = searcher.Get();
+                    }
 
-                if (listPrevDevices == null || !listPrevDevices.Any()) // So we don't detect already plugged in devices the first time.
+                    foreach (var device in collection)
+                    {
+                        devices.Add(new UsbDeviceInfo(
+                            (string)device.GetPropertyValue("DeviceID"),
+                            (string)device.GetPropertyValue("Name")));
+                    }
+
+                    if (listPrevDevices == null || !listPrevDevices.Any()) // So we don't detect already plugged in devices the first time.
+                        listPrevDevices = devices;
+
+                    var insertionDevices = devices.Where(d => !listPrevDevices.Any(d2 => d2.strDeviceID == d.strDeviceID));
+                    if (insertionDevices != null && insertionDevices.Any())
+                    {
+                        // Event that amount of drives had changed 
+                        UsbAdd(this, new UsbEventArgs());
+                    }
+
+                    var removedDevices = listPrevDevices.Where(d => !devices.Any(d2 => d2.strDeviceID == d.strDeviceID));
+                    if (removedDevices != null && removedDevices.Any())
+                    {
+                        // Event that amount of drives had changed 
+                        UsbRemoved(this, new UsbEventArgs());
+                    }
+
                     listPrevDevices = devices;
-
-                var insertionDevices = devices.Where(d => !listPrevDevices.Any(d2 => d2.strDeviceID == d.strDeviceID));
-                if (insertionDevices != null && insertionDevices.Any())
-                {
-                    // Event that amount of drives had changed 
-                    UsbAdd(this, new UsbEventArgs());
+                    collection.Dispose();
                 }
-
-                var removedDevices = listPrevDevices.Where(d => !devices.Any(d2 => d2.strDeviceID == d.strDeviceID));
-                if (removedDevices != null && removedDevices.Any())
-                {
-                    // Event that amount of drives had changed 
-                    UsbRemoved(this, new UsbEventArgs());
-                }
-
-                listPrevDevices = devices;
-                collection.Dispose();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
             }
         }
     }

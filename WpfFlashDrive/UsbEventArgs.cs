@@ -7,9 +7,6 @@ namespace WpfFlashDrive
         /// <summary>
         ///  Constructor 
         /// </summary>
-        public UsbEventArgs()
-        {
-            
-        }
+        public UsbEventArgs(){}
     }
 }

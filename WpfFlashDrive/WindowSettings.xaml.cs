@@ -1,20 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Configuration;
-using System.Drawing;
-using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
 using System.Windows.Forms;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace WpfFlashDrive
 {
@@ -25,33 +14,40 @@ namespace WpfFlashDrive
     {
         // array of radiobuttons
         System.Windows.Controls.RadioButton[] radioButtons = null;
-        
+
         public WindowSettings()
         {
             InitializeComponent();
             InitializeIconsWindowSettings();
-
-            // configuration of settings widow 
-            Left = System.Windows.SystemParameters.WorkArea.Right - Width;
-            Top = System.Windows.SystemParameters.WorkArea.Bottom - Height - 100;
-
-            // radiobutton's array initialization 
-            radioButtons = new[]
+            try
             {
-                RadioButtonScanAutomatically,
-                RadioButtonScanManuallyRequest,
-            };
+                // configuration of settings widow 
+                Left = System.Windows.SystemParameters.WorkArea.Right - Width;
+                Top = System.Windows.SystemParameters.WorkArea.Bottom - Height - 100;
 
-            if (Properties.Settings.Default.TypeOfScan == RadioButtonScanManuallyRequest.Name)
-            {
-                RadioButtonScanManuallyRequest.IsChecked = true;
+                // radiobutton's array initialization 
+                radioButtons = new[]
+                {
+                    RadioButtonScanAutomatically,
+                    RadioButtonScanManuallyRequest,
+                };
+
+                if (Properties.Settings.Default.TypeOfScan == RadioButtonScanManuallyRequest.Name)
+                {
+                    RadioButtonScanManuallyRequest.IsChecked = true;
+                }
+                else
+                {
+                    RadioButtonScanAutomatically.IsChecked = true;
+                }
+
+                TextBlockSettings.Text = Properties.Settings.Default.DirectoryForWatching;
             }
-            else
-            {
-                RadioButtonScanAutomatically.IsChecked = true; 
-            }
 
-            TextBlockSettings.Text = Properties.Settings.Default.DirectoryForWatching;
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -59,10 +55,17 @@ namespace WpfFlashDrive
         /// </summary>
         private void InitializeIconsWindowSettings()
         {
-            Icon = new BitmapImage(new Uri(ConfigurationManager.AppSettings["Icon_Main"], UriKind.Relative));
+            try
+            {
+                Icon = new BitmapImage(new Uri(ConfigurationManager.AppSettings["Icon_Main"], UriKind.Relative));
 
-            WindowSettingsImage.Source =
-                new BitmapImage(new Uri(ConfigurationManager.AppSettings["ImgSettings"], UriKind.Relative));
+                WindowSettingsImage.Source =
+                    new BitmapImage(new Uri(ConfigurationManager.AppSettings["ImgSettings"], UriKind.Relative));
+            }
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -97,14 +100,22 @@ namespace WpfFlashDrive
 
         private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            string tempTypeOfScan =
-                radioButtons.Where(button => button.IsChecked == true).Select(button => button.Name).FirstOrDefault();
-            if (!string.IsNullOrEmpty(tempTypeOfScan))
+            try
             {
-                Properties.Settings.Default.TypeOfScan = tempTypeOfScan;
-                Properties.Settings.Default.Save();
+                string tempTypeOfScan =
+                    radioButtons.Where(button => button.IsChecked == true)
+                        .Select(button => button.Name)
+                        .FirstOrDefault();
+                if (!string.IsNullOrEmpty(tempTypeOfScan))
+                {
+                    Properties.Settings.Default.TypeOfScan = tempTypeOfScan;
+                    Properties.Settings.Default.Save();
+                }
             }
-               
+            catch (Exception ex)
+            {
+                System.Windows.Forms.MessageBox.Show(ex.Message);
+            }
         }
     }
 }

@@ -2,8 +2,6 @@
 using System.Configuration;
 using System.Data;
 using System.Data.Common;
-using System.Data.SqlClient;
-using System.Globalization;
 using System.IO;
 using System.Windows;
 
@@ -156,8 +154,16 @@ namespace WpfFlashDrive
         /// <returns>connection element</returns>
         private IDbConnection GetConnection(string strProvider)
         {
-            DbProviderFactory factory = DbProviderFactories.GetFactory(strProvider);
-            IDbConnection connectionDb = factory.CreateConnection();
+            IDbConnection connectionDb = null;
+            try
+            {
+                DbProviderFactory factory = DbProviderFactories.GetFactory(strProvider);
+                connectionDb = factory.CreateConnection();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
             return connectionDb;
         }
 
@@ -168,7 +174,14 @@ namespace WpfFlashDrive
         /// <returns></returns>
         public void SetConnectionString(string strProvider)
         {
-            _strConnectionString = ConfigurationManager.ConnectionStrings[strProvider].ConnectionString;
+            try
+            {
+                _strConnectionString = ConfigurationManager.ConnectionStrings[strProvider].ConnectionString;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -177,9 +190,16 @@ namespace WpfFlashDrive
         /// <param name="strProvider">class for Providers</param>
         public void OpenConnection(string strProvider)
         {
-            _connection = GetConnection(strProvider);
-            _connection.ConnectionString = _strConnectionString;
-            _connection.Open();
+            try
+            {
+                _connection = GetConnection(strProvider);
+                _connection.ConnectionString = _strConnectionString;
+                _connection.Open();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -187,7 +207,14 @@ namespace WpfFlashDrive
         /// </summary>
         public void CloseConnection()
         {
-            _connection.Close();
+            try
+            {
+                _connection.Close();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -198,21 +225,28 @@ namespace WpfFlashDrive
         /// <param name="date">date of file deleting</param>
         public void InsertIntoDuplicates(string FullName, long lSize, DateTime date)
         {
-            using (var cmd = _connection.CreateCommand())
+            try
             {
-                cmd.CommandText = string.Format("INSERT INTO " +
-                                                Tables.DeletedDuplicates +
-                                                " (" + TableDeletedDuplicates.FullName +
-                                                " , " + TableDeletedDuplicates.Size +
-                                                " , " + TableDeletedDuplicates.DateOfDeleting +
-                                                " ) " +
-                                                "VALUES ('" + FullName +
-                                                "' , " + lSize +
-                                                ", '" + date.ToString("yyyy-MM-dd HH:mm:ss") +
-                                                "')");
-                cmd.ExecuteNonQuery();
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandText = string.Format("INSERT INTO " +
+                                                    Tables.DeletedDuplicates +
+                                                    " (" + TableDeletedDuplicates.FullName +
+                                                    " , " + TableDeletedDuplicates.Size +
+                                                    " , " + TableDeletedDuplicates.DateOfDeleting +
+                                                    " ) " +
+                                                    "VALUES ('" + FullName +
+                                                    "' , " + lSize +
+                                                    ", '" + date.ToString("yyyy-MM-dd HH:mm:ss") +
+                                                    "')");
+                    cmd.ExecuteNonQuery();
+                }
+                InsertIntoDailyActivity(FullName, lSize, DateTime.UtcNow, Operation.Delete);
             }
-            InsertIntoDailyActivity(FullName, lSize, DateTime.UtcNow, Operation.Delete);
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -223,21 +257,28 @@ namespace WpfFlashDrive
         /// <param name="date">date of file creation</param>
         public void InsertIntoCopied(string FullName, long lSize, DateTime date)
         {
-            using (var cmd = _connection.CreateCommand())
+            try
             {
-                cmd.CommandText = string.Format("INSERT INTO " +
-                                                Tables.CopiedFiles +
-                                                " (" + TableCopiedFiles.FullName +
-                                                " , " + TableCopiedFiles.Size +
-                                                " , " + TableCopiedFiles.DateOfCreation +
-                                                " ) " +
-                                                "VALUES ( '" + FullName +
-                                                "' , " + lSize +
-                                                ", '" + date.ToString("yyyy-MM-dd HH:mm:ss") +
-                                                "')");
-                cmd.ExecuteNonQuery();
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandText = string.Format("INSERT INTO " +
+                                                    Tables.CopiedFiles +
+                                                    " (" + TableCopiedFiles.FullName +
+                                                    " , " + TableCopiedFiles.Size +
+                                                    " , " + TableCopiedFiles.DateOfCreation +
+                                                    " ) " +
+                                                    "VALUES ( '" + FullName +
+                                                    "' , " + lSize +
+                                                    ", '" + date.ToString("yyyy-MM-dd HH:mm:ss") +
+                                                    "')");
+                    cmd.ExecuteNonQuery();
+                }
+                InsertIntoDailyActivity(FullName, lSize, DateTime.UtcNow, Operation.Copy);
             }
-            InsertIntoDailyActivity(FullName, lSize, DateTime.UtcNow, Operation.Copy);
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -249,21 +290,28 @@ namespace WpfFlashDrive
         /// <param name="strOperation">kind of operation</param>
         public void InsertIntoDailyActivity(string FullName, long lSize, DateTime date, string strOperation)
         {
-            using (var cmd = _connection.CreateCommand())
+            try
             {
-                cmd.CommandText = string.Format("INSERT INTO " +
-                                                Tables.DailyActivity +
-                                                " (" + TableDailyActivity.Date +
-                                                " , " + TableDailyActivity.Operation +
-                                                " , " + TableDailyActivity.FullName +
-                                                " , " + TableDailyActivity.Size +
-                                                " ) " +
-                                                "VALUES('" + date.ToString("yyyy.MM.dd HH:mm:ss") +
-                                                "', '" + strOperation +
-                                                "', '" + FullName +
-                                                "' , " + lSize +
-                                                " )");
-                cmd.ExecuteNonQuery();
+                using (var cmd = _connection.CreateCommand())
+                {
+                    cmd.CommandText = string.Format("INSERT INTO " +
+                                                    Tables.DailyActivity +
+                                                    " (" + TableDailyActivity.Date +
+                                                    " , " + TableDailyActivity.Operation +
+                                                    " , " + TableDailyActivity.FullName +
+                                                    " , " + TableDailyActivity.Size +
+                                                    " ) " +
+                                                    "VALUES('" + date.ToString("yyyy.MM.dd HH:mm:ss") +
+                                                    "', '" + strOperation +
+                                                    "', '" + FullName +
+                                                    "' , " + lSize +
+                                                    " )");
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
             }
         }
 
@@ -272,24 +320,31 @@ namespace WpfFlashDrive
         /// </summary>
         public void GetStatistics()
         {
-            using (var cmd = _connection.CreateCommand())
+            try
             {
-                cmd.CommandText = string.Format("SELECT * FROM " + Tables.DailyActivity + " ");
-                var dataReader = cmd.ExecuteReader();
-
-                using (StreamWriter file = new StreamWriter("Statistics.txt", false))
+                using (var cmd = _connection.CreateCommand())
                 {
-                    while (dataReader.Read())
+                    cmd.CommandText = string.Format("SELECT * FROM " + Tables.DailyActivity + " ");
+                    var dataReader = cmd.ExecuteReader();
+
+                    using (StreamWriter file = new StreamWriter("Statistics.txt", false))
                     {
-                        file.WriteLine(dataReader[TableDailyActivity.Id] + "\t" +
-                                       dataReader[TableDailyActivity.Date] + "\t" +
-                                       dataReader[TableDailyActivity.Operation] + "\t" +
-                                       dataReader[TableDailyActivity.Size] + "\t" +
-                                       dataReader[TableDailyActivity.FullName]);
+                        while (dataReader.Read())
+                        {
+                            file.WriteLine(dataReader[TableDailyActivity.Id] + "\t" +
+                                           dataReader[TableDailyActivity.Date] + "\t" +
+                                           dataReader[TableDailyActivity.Operation] + "\t" +
+                                           dataReader[TableDailyActivity.Size] + "\t" +
+                                           dataReader[TableDailyActivity.FullName]);
+                        }
                     }
                 }
+                MessageBox.Show("File with statistics was completed");
             }
-            MessageBox.Show("File with statistics was completed"); 
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
     }
 }

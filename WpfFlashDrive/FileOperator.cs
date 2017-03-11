@@ -2,16 +2,12 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Threading;
-using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Documents;
 
 namespace WpfFlashDrive
 {
     public static class FileOperator
     {
-
         /// <summary>
         /// Method for traverse of all directories and subdirectories in 
         /// DirectoryForWatching 
@@ -59,22 +55,30 @@ namespace WpfFlashDrive
         public static DriveInfo GetDriveInfoAddUsb(List<DriveInfo> _listOfDriveInfo)
         {
             DriveInfo driveInfo = null;
-            List<DriveInfo> listDriveTemp = new List<DriveInfo>(DriveInfo.GetDrives())
+            try
+            {
+                List<DriveInfo> listDriveTemp = new List<DriveInfo>(DriveInfo.GetDrives())
                 .Where(drive => drive.DriveType == DriveType.Removable).ToList();
 
-            // check that amount of removable discs has been changed 
-            if (listDriveTemp.Count > _listOfDriveInfo.Count)
-            {
-                // search what disc is new 
-                for (int i = 0; i < listDriveTemp.Count; i++)
+                // check that amount of removable discs has been changed 
+                if (listDriveTemp.Count > _listOfDriveInfo.Count)
                 {
-                    if (!_listOfDriveInfo.Any(drive => drive.Name == listDriveTemp[i].Name))
+                    // search what disc is new 
+                    for (int i = 0; i < listDriveTemp.Count; i++)
                     {
-                        _listOfDriveInfo.Add(listDriveTemp[i]);
-                        driveInfo = listDriveTemp[i];
+                        if (!_listOfDriveInfo.Any(drive => drive.Name == listDriveTemp[i].Name))
+                        {
+                            _listOfDriveInfo.Add(listDriveTemp[i]);
+                            driveInfo = listDriveTemp[i];
+                        }
                     }
                 }
             }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
+            
             return driveInfo;
         }
 

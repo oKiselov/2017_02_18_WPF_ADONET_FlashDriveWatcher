@@ -3,17 +3,10 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.IO;
 using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
-using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Shapes;
 
 namespace WpfFlashDrive
 {
@@ -44,12 +37,19 @@ namespace WpfFlashDrive
         /// </summary>
         private void InitializeIconsWindowScan()
         {
-            Icon = new BitmapImage(new Uri(ConfigurationManager.AppSettings["Icon_Main"], UriKind.Relative));
+            try
+            {
+                Icon = new BitmapImage(new Uri(ConfigurationManager.AppSettings["Icon_Main"], UriKind.Relative));
 
-            var brushBeginToScan = new System.Windows.Controls.Image();
-            brushBeginToScan.Source =
-                new BitmapImage(new Uri(ConfigurationManager.AppSettings["ImgScan"], UriKind.Relative));
-            ButtonStartScanning.Content = brushBeginToScan;
+                var brushBeginToScan = new System.Windows.Controls.Image();
+                brushBeginToScan.Source =
+                    new BitmapImage(new Uri(ConfigurationManager.AppSettings["ImgScan"], UriKind.Relative));
+                ButtonStartScanning.Content = brushBeginToScan;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         /// <summary>
@@ -59,15 +59,29 @@ namespace WpfFlashDrive
         /// <param name="e"></param>
         private void ButtonStartScanning_OnClick(object sender, RoutedEventArgs e)
         {
-            StartScanAsync(); 
+            try
+            {
+                StartScanAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         private void ButtonCancel_OnClick(object sender, RoutedEventArgs e)
         {
-            _cancelToken.Cancel();
+            try
+            {
+                _cancelToken.Cancel();
 
-            LabelScan.Content = string.Format("Canceled");
-            ProgressBarScan.IsIndeterminate = false;
+                LabelScan.Content = string.Format("Canceled");
+                ProgressBarScan.IsIndeterminate = false;
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(ex.Message);
+            }
         }
 
         public async void StartScanAsync()
@@ -100,7 +114,6 @@ namespace WpfFlashDrive
                 List<FileInfo> listOfFilesOnFlashDrive = new List<FileInfo>();
                 LabelScan.Content = string.Format("Browse flash drive...");
                 listOfFilesOnFlashDrive.AddRange(await WalkDirectoryTree(Properties.Settings.Default.FlashDrive));
-
 
                 List<FileInfo> listOfDublicates = new List<FileInfo>();
                 List<FileInfo> listOfUnique = new List<FileInfo>();
@@ -166,7 +179,14 @@ namespace WpfFlashDrive
             return Task.Run(() =>
             {
                 List<FileInfo> retList = new List<FileInfo>();
-                FileOperator.WalkDirectoryTree(new DirectoryInfo(strPathToDirectory), retList);
+                try
+                {
+                    FileOperator.WalkDirectoryTree(new DirectoryInfo(strPathToDirectory), retList);
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
                 return retList;
             });
         }
@@ -244,22 +264,29 @@ namespace WpfFlashDrive
         {
             return Task.Run(() =>
             {
-                ParallelOptions parOpts = new ParallelOptions();
-                parOpts.CancellationToken = _cancelToken.Token;
-
-                _dataService = new DataService();
-                _dataService.SetConnectionString(WpfFlashDrive.DataProvider.SqlServer);
-                _dataService.OpenConnection(WpfFlashDrive.DataProvider.SqlServer);
-
-                foreach (var duplicate in listOfDublicates)
+                try
                 {
-                    _dataService.InsertIntoDuplicates(
-                        duplicate.FullName,
-                        duplicate.Length,
-                        DateTime.UtcNow);
-                }
+                    ParallelOptions parOpts = new ParallelOptions();
+                    parOpts.CancellationToken = _cancelToken.Token;
 
-                _dataService.CloseConnection();
+                    _dataService = new DataService();
+                    _dataService.SetConnectionString(WpfFlashDrive.DataProvider.SqlServer);
+                    _dataService.OpenConnection(WpfFlashDrive.DataProvider.SqlServer);
+
+                    foreach (var duplicate in listOfDublicates)
+                    {
+                        _dataService.InsertIntoDuplicates(
+                            duplicate.FullName,
+                            duplicate.Length,
+                            DateTime.UtcNow);
+                    }
+
+                    _dataService.CloseConnection();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             });
         }
 
@@ -272,22 +299,29 @@ namespace WpfFlashDrive
         {
             return Task.Run(() =>
             {
-                ParallelOptions parOpts = new ParallelOptions();
-                parOpts.CancellationToken = _cancelToken.Token;
-
-                _dataService = new DataService();
-                _dataService.SetConnectionString(WpfFlashDrive.DataProvider.SqlServer);
-                _dataService.OpenConnection(WpfFlashDrive.DataProvider.SqlServer);
-
-                foreach (var unique in listOfUnique)
+                try
                 {
-                    _dataService.InsertIntoCopied(
-                        unique.FullName,
-                        unique.Length,
-                        unique.CreationTime);
-                }
+                    ParallelOptions parOpts = new ParallelOptions();
+                    parOpts.CancellationToken = _cancelToken.Token;
 
-                _dataService.CloseConnection();
+                    _dataService = new DataService();
+                    _dataService.SetConnectionString(WpfFlashDrive.DataProvider.SqlServer);
+                    _dataService.OpenConnection(WpfFlashDrive.DataProvider.SqlServer);
+
+                    foreach (var unique in listOfUnique)
+                    {
+                        _dataService.InsertIntoCopied(
+                            unique.FullName,
+                            unique.Length,
+                            unique.CreationTime);
+                    }
+
+                    _dataService.CloseConnection();
+                }
+                catch (Exception ex)
+                {
+                    MessageBox.Show(ex.Message);
+                }
             });
         }
     }
